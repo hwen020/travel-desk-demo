@@ -19,6 +19,8 @@ flowchart LR
 
 Local development uses the same Python routes over loopback HTTP. The static HTML, CSS, and JavaScript are served from an explicit route list. One process serializes session operations, including reset and expiry, while SQLite commits workflow changes and audit events together.
 
+On Render Free, Render provides the TLS proxy and the app stores SQLite files under `/tmp/travel-desk`. Startup atomically initializes a fictional template if absent. Session creation and reset copy that template under the process lock and give each copy a fresh revision. A missing cookie-backed workspace is restored on the workspace read using a new cookie. An obsolete mutation is refused, so it cannot apply to seeded records after recovery. Render may discard all temporary files on sleep, restart or deployment.
+
 ## Database design
 
 ```mermaid

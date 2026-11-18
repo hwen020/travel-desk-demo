@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import shutil
 import tempfile
 from threading import Lock
 import time
@@ -13,7 +14,7 @@ from workflow import ROOT, ROLES, POLICY_ACTIONS, PolicyViolation, connect, init
 
 COOKIE = "travel_demo"
 TOKEN = re.compile(r"[0-9a-f]{48}")
-TEMPORARY = re.compile(r"[0-9a-f]{48}-[a-z0-9_]+\.tmp(?:-journal)?")
+TEMPORARY = re.compile(r"(?:[0-9a-f]{48}|\.seed)-[a-z0-9_]+\.tmp(?:-journal)?")
 SESSION_SCHEMA = """
 CREATE TABLE demo_session (actor TEXT NOT NULL, revision TEXT NOT NULL, name TEXT NOT NULL DEFAULT 'Demo workspace');
 CREATE TABLE policy_checks (
@@ -72,26 +73,40 @@ def seed(db):
 class Sessions:
     """Persist isolated SQLite files for one application process on one volume."""
 
-    def __init__(self, directory=None, ttl=None, capacity=None):
-        self.directory = Path(directory if directory is not None else os.getenv("DEMO_DATA_DIR", ROOT / ".demo-data"))
+    def __init__(self, directory=None, ttl=None, capacity=None, ephemeral=None):
+        self.ephemeral = ephemeral if ephemeral is not None else os.getenv("DEMO_EPHEMERAL", "0") == "1"
+        default = Path(tempfile.gettempdir()) / "travel-desk" if self.ephemeral else ROOT / ".demo-data"
+        self.directory = Path(directory if directory is not None else os.getenv("DEMO_DATA_DIR", default))
         self.ttl = ttl if ttl is not None else int(os.getenv("DEMO_TTL_HOURS", "24")) * 3600
         self.capacity = capacity if capacity is not None else int(os.getenv("DEMO_MAX_SESSIONS", "250"))
         self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.lock = Lock()
         self.next_sweep = 0
+        self.template = self.directory / ".seed.sqlite3" if self.ephemeral else None
+        if self.template is not None and not self.template.is_file():
+            self._replace(self.template)
 
     def fresh(self, path):
+        self._replace(path, self.template)
+
+    def _replace(self, path, source=None):
         with tempfile.NamedTemporaryFile(prefix=f"{path.stem}-", suffix=".tmp", dir=self.directory, delete=False) as handle:
             temporary = Path(handle.name)
         try:
+            if source is not None:
+                shutil.copyfile(source, temporary)
             with closing(connect(temporary)) as db:
-                seed(db)
+                if source is None:
+                    seed(db)
+                else:
+                    with db:
+                        db.execute("UPDATE demo_session SET revision=?", (secrets.token_hex(16),))
             temporary.replace(path)
         finally:
             temporary.unlink(missing_ok=True)
 
     @contextmanager
-    def open(self, token, create=False):
+    def open(self, token, create=False, recover=False):
         with self.lock:
             now = time.time()
             if now >= self.next_sweep:
@@ -105,7 +120,7 @@ class Sessions:
                 path.unlink()
             is_new = not path or not path.is_file()
             if is_new:
-                if not create:
+                if not create and not (self.ephemeral and recover and path is not None):
                     raise PermissionError("Start the live demo before using this action.")
                 count = sum(TOKEN.fullmatch(p.stem) is not None for p in self.directory.glob("*.sqlite3"))
                 if count >= self.capacity:

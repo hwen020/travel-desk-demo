@@ -23,6 +23,8 @@ Public policy administration is assigned to Admin. The legacy workflow module co
 
 ## Deployment status
 
+Render Free support adds a native Python Blueprint, startup SQLite seeding, cookie rotation on session recovery, and tests for concurrent visitors and reset isolation. It uses one free web service with no additional data resources. Public HTTPS verification is pending.
+
 Railway configuration is included for remote Docker builds with a required writable volume at `/data`, secure cookies, and a startup health check. Deploy with one replica. A restart of the extracted application confirmed that the selected role and new trip persisted for the correct visitor, the second visitor retained the seed, and reset touched only the initiating visitor. Deployment requires a Railway account session. The allowlisted ZIP can also serve as a clean GitHub publication source after account authorization.
 
 The application has been exercised over loopback with temporary fictional SQLite files. Docker built an earlier v3 image, then its engine returned an internal error on final rebuild attempts. The final container and Caddy runtime smoke checks are pending. Public HTTPS deployment requires an authorized Docker host and public DNS hostname. No public HTTPS URL has been verified.

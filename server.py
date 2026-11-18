@@ -57,6 +57,8 @@ class Handler(BaseHTTPRequestHandler):
     def log_request(self, code="-", size="-"):
         # Avoid recording request URLs, cookie values, IP addresses and request bodies.
         route = urlsplit(self.path).path
+        if route == "/healthz" and code == 200:
+            return
         known = route in ASSETS or route in POST_ROUTES or route in ("/healthz", "/api/report.csv", "/api/summary.csv")
         LOG.info("%s %s %s", self.command, route if known else "[unknown]", code)
 
@@ -116,7 +118,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(404, {"error": "Not found."})
 
             data = self.read_payload() if post else None
-            with self.server.sessions.open(self.token(), create=route == "/api/session") as (token, path, is_new):
+            with self.server.sessions.open(self.token(), create=route == "/api/session",
+                                           recover=not post and route == "/api/trips") as (token, path, is_new):
                 if is_new:
                     secure = "; Secure" if self.server.secure else ""
                     self.session_cookie = f"{COOKIE}={token}; Path=/; HttpOnly; SameSite=Strict{secure}"
@@ -142,6 +145,8 @@ class Handler(BaseHTTPRequestHandler):
                         content = self.report(route, db, actor)
                     else:
                         payload = workspace(db, actor)
+                        if is_new and route == "/api/trips":
+                            payload["session_restored"] = True
 
             if route.endswith(".csv"):
                 return self.send_bytes(200, content, "text/csv; charset=utf-8")
@@ -158,8 +163,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(400, {"error": str(exc) if isinstance(exc, ValueError) else "Check the required fields."})
         except (BrokenPipeError, ConnectionResetError, TimeoutError):
             LOG.info("Client connection closed")
-        except Exception:
-            LOG.error("Request failed", exc_info=True)
+        except Exception as exc:
+            LOG.error("Request failed (%s)", type(exc).__name__)
             self.send_json(500, {"error": "The demo could not complete this request. Try again."})
 
     def report(self, route, db, actor):

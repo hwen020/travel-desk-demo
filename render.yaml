@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: travel-desk-demo
+    runtime: python
+    plan: free
+    branch: main
+    autoDeployTrigger: commit
+    buildCommand: python -B -m unittest discover -s tests -q
+    startCommand: python -u server.py --host 0.0.0.0
+    healthCheckPath: /healthz
+    envVars:
+      - key: DEMO_EPHEMERAL
+        value: "1"
+      - key: DEMO_DATA_DIR
+        value: /tmp/travel-desk
+      - key: DEMO_SECURE_COOKIE
+        value: "1"
+      - key: DEMO_MAX_SESSIONS
+        value: "100"
+      - key: DEMO_TTL_HOURS
+        value: "24"

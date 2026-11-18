@@ -67,6 +67,22 @@ Open <http://127.0.0.1:8000>. The default store is `.demo-data/`. Set `HOST`, `P
 
 **Live Demo URL** · Pending public HTTPS verification.
 
+### Render Free
+
+Deploy the `main` branch using the repository's `render.yaml` Blueprint. It declares one free native Python web service with push-triggered deployments, a unit-test build step and `/healthz`. The start command listens on `0.0.0.0` and reads Render's assigned `PORT`. Render terminates HTTPS and the service always sets Secure session cookies.
+
+| Setting | Value |
+| --- | --- |
+| `DEMO_EPHEMERAL` | `1` |
+| `DEMO_DATA_DIR` | `/tmp/travel-desk` |
+| `DEMO_SECURE_COOKIE` | `1` |
+| `DEMO_MAX_SESSIONS` | `100` |
+| `DEMO_TTL_HOURS` | `24` |
+
+On startup the app creates the fictional SQLite template if it is missing. Each visitor gets an independent copy. When a browser returns with a session whose file has disappeared, the app creates a fresh workspace, rotates its cookie and leaves other visitors untouched. Previously opened forms must be reopened before editing the fresh workspace.
+
+Free instances may sleep after about 15 minutes without inbound traffic. The next visit can take about a minute to wake the instance. Sleep, restart and redeploy can discard visitor edits. Render grants 750 Free instance hours per workspace per calendar month and applies workspace bandwidth and build limits. This deployment uses the instance's temporary directory and relies on incoming traffic to wake the service. See [Render Free limits](https://render.com/docs/free).
+
 ### Railway
 
 Extract the allowlisted release ZIP and upload that directory with the Railway CLI, or connect a GitHub repository created from the extracted contents. Railway builds the existing Dockerfile remotely. The app has no external database or runtime dependencies.

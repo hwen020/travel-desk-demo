@@ -88,7 +88,8 @@ async function refresh(initial = false) {
     const next = await (await request('/api/trips')).json();
     if (version !== refreshVersion) return;
     updateState(next);
-    if (initial) notice('');
+    if (next.session_restored) notice('Your previous session ended. A fresh demo workspace is ready.');
+    else if (initial) notice('');
   } catch (error) {
     if (version !== refreshVersion) return;
     if (initial || error.status === 403) showWelcome();

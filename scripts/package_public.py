@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 # Explicit source allowlist: original documents, databases, caches and other archives never enter the package.
 FILES = (
     ".gitignore", ".dockerignore", ".env.example", ".vscode/tasks.json",
-    "Dockerfile", "compose.yaml", "Caddyfile", "railway.toml",
+    "Dockerfile", "compose.yaml", "Caddyfile", "railway.toml", "render.yaml",
     "README.md", "server.py", "demo.py", "workflow.py", "policies.py",
     "public/index.html", "public/app.js", "public/style.css",
     "docs/ARCHITECTURE.md", "docs/DELIVERY.md",

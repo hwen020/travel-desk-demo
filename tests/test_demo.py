@@ -1,5 +1,6 @@
 """HTTP integration checks for session security and the portfolio workflow."""
 from contextlib import closing
+from concurrent.futures import ThreadPoolExecutor
 from http.client import HTTPConnection
 import json
 from pathlib import Path
@@ -67,6 +68,57 @@ class DemoTests(unittest.TestCase):
         code, body = self.visitor.action(action, **fields)
         self.assertEqual(code, 200, body)
         return body["id"]
+
+    def test_ephemeral_bootstrap_is_idempotent_and_health_is_stateless(self):
+        directory = Path(self.directory.name) / "fresh"
+        self.server.sessions = Sessions(directory, ephemeral=True)
+        seed = directory / ".seed.sqlite3"
+        original = seed.read_bytes()
+        self.assertEqual(self.visitor.call("/healthz"), (200, {"status": "ok"}))
+        self.assertEqual(list(directory.iterdir()), [seed])
+        self.start()
+        self.action("create", **REQUEST)
+        self.server.sessions = Sessions(directory, ephemeral=True)
+        self.assertEqual(seed.read_bytes(), original)
+        self.assertEqual(self.visitor.call("/api/trips")[1]["analytics"]["requests"], 5)
+
+    def test_ephemeral_recovery_rotates_lost_cookie_and_rejects_stale_writes(self):
+        directory = Path(self.directory.name)
+        self.server.sessions = Sessions(directory, ephemeral=True)
+        visitor = self.start()
+        self.action("create", **REQUEST)
+        visitor.role("jordan")
+        old_cookie, old_revision = visitor.cookie, visitor.state["revision"]
+        for database in directory.glob("*.sqlite3"):
+            database.unlink()
+        self.server.sessions = Sessions(directory, ephemeral=True)
+        self.assertEqual(visitor.action("approve_trip", id=1)[0], 403)
+        self.assertEqual(Visitor(self.server.server_port).call("/api/trips")[0], 403)
+        status, restored = visitor.call("/api/trips")
+        self.assertEqual(status, 200)
+        self.assertTrue(restored["session_restored"])
+        self.assertEqual(restored["actor"], "alex")
+        self.assertEqual(restored["analytics"]["requests"], 4)
+        self.assertNotEqual(visitor.cookie, old_cookie)
+        self.assertNotEqual(restored["revision"], old_revision)
+        self.assertEqual(visitor.action("create", **REQUEST, revision=old_revision)[0], 403)
+        self.assertNotIn("session_restored", visitor.call("/api/trips")[1])
+
+    def test_ephemeral_concurrent_sessions_and_reset_are_independent(self):
+        self.server.sessions = Sessions(self.directory.name, ephemeral=True)
+        visitors = [self.visitor, Visitor(self.server.server_port)]
+
+        def submit(visitor, destination):
+            self.assertEqual(visitor.call("/api/session", {})[0], 200)
+            self.assertEqual(visitor.action("create", **{**REQUEST, "destination": destination})[0], 200)
+            return visitor.call("/api/trips")[1]["trips"][0]["destination"]
+
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            destinations = list(workers.map(submit, visitors, ["Guest A", "Guest B"]))
+        self.assertEqual(destinations, ["Guest A", "Guest B"])
+        self.assertNotEqual(visitors[0].state["revision"], visitors[1].state["revision"])
+        self.assertEqual(visitors[0].call("/api/reset", {})[1]["analytics"]["requests"], 4)
+        self.assertEqual(visitors[1].call("/api/trips")[1]["trips"][0]["destination"], "Guest B")
 
     def test_server_roles_csrf_and_forged_header(self):
         v = self.visitor

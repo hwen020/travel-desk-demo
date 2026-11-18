@@ -52,7 +52,7 @@ class DemoTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
-        self.server = Server(("127.0.0.1", 0), Sessions(self.directory.name), secure=True)
+        self.server = Server(("127.0.0.1", 0), Sessions(self.directory.name, ephemeral=False), secure=True)
         self.addCleanup(self.server.server_close)
         self.thread = Thread(target=self.server.serve_forever, kwargs={"poll_interval": .01})
         self.thread.start()
@@ -153,7 +153,7 @@ class DemoTests(unittest.TestCase):
         self.action("create", **REQUEST)
         self.assertEqual(v.call("/api/trips")[1]["analytics"]["requests"], 5)
         self.assertEqual(other.call("/api/trips")[1]["analytics"]["requests"], 4)
-        self.server.sessions = Sessions(self.directory.name)
+        self.server.sessions = Sessions(self.directory.name, ephemeral=False)
         self.assertEqual(v.call("/api/trips")[1]["analytics"]["requests"], 5)
         stale_key = v.state["revision"]
         self.assertEqual(v.call("/api/reset", {})[1]["analytics"]["requests"], 4)

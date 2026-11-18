@@ -1,0 +1,30 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      DEMO_DATA_DIR: /data
+      DEMO_SECURE_COOKIE: "1"
+      DEMO_TTL_HOURS: ${DEMO_TTL_HOURS:-24}
+      DEMO_MAX_SESSIONS: ${DEMO_MAX_SESSIONS:-250}
+    volumes:
+      - demo_data:/data
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      DEMO_DOMAIN: ${DEMO_DOMAIN:?Set DEMO_DOMAIN to a public hostname}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - proxy_data:/data
+      - proxy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+volumes:
+  demo_data:
+  proxy_data:
+  proxy_config:

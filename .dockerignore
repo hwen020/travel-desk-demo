@@ -1,0 +1,10 @@
+**
+!Dockerfile
+!server.py
+!demo.py
+!workflow.py
+!policies.py
+!public/
+!public/index.html
+!public/app.js
+!public/style.css

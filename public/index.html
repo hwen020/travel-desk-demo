@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="An interactive enterprise travel and expense portfolio demo.">
+<title>Travel Desk · Demo workspace</title>
+<link rel="stylesheet" href="/style.css">
+<script src="/app.js" defer></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="/"><span class="brand-icon" aria-hidden="true">✈</span><span>Travel Desk<small id="workspace-name">Demo workspace</small></span></a>
+    <nav aria-label="Workspace">
+      <span class="nav-heading">WORKSPACE</span>
+      <button type="button" data-view="overview" aria-current="page"><span aria-hidden="true">▦</span> Overview</button>
+      <button type="button" data-view="requests"><span aria-hidden="true">▤</span> Travel requests</button>
+      <button type="button" data-view="policy"><span aria-hidden="true">◇</span> Policies &amp; reports</button>
+    </nav>
+    <p class="sidebar-note">Fictional demo data<br><small>All bookings and payments are simulated.</small></p>
+  </aside>
+  <div class="content">
+    <header class="bar">
+      <span>Workspace <span class="muted">/</span> <strong id="location-name">Overview</strong></span>
+      <div id="session-controls" class="header-actions" hidden>
+        <button type="button" class="secondary" id="tour-open">Demo tour</button>
+        <button type="button" class="secondary" id="reset">Reset demo</button>
+        <label class="role">View as <select id="actor"><option value="alex">Employee · Alex</option><option value="jordan">Manager · Jordan</option><option value="sam">Finance · Sam</option><option value="taylor">Admin · Taylor</option><option value="casey">Employee / Agent · Casey</option></select></label>
+      </div>
+    </header>
+    <main>
+      <p id="notice" role="status" aria-live="polite" hidden></p>
+      <section id="welcome" class="welcome" hidden>
+        <div class="welcome-card">
+          <p class="eyebrow">ENTERPRISE TRAVEL &amp; EXPENSE</p>
+          <h1>Manage the whole trip in one workspace.</h1>
+          <p>Follow a fictional travel request from policy check and approval through booking, expense review, and settlement.</p>
+          <button id="start" type="button">Try Live Demo <span aria-hidden="true">→</span></button>
+          <p class="muted">No account required. Your demo data is isolated from other visitors.</p>
+        </div>
+        <div class="welcome-flow" aria-label="Workflow stages">
+          <span><i>↗</i><b>Request travel</b><small>Employee</small></span>
+          <span><i>✓</i><b>Review and approve</b><small>Manager</small></span>
+          <span><i>≋</i><b>Reconcile expenses</b><small>Finance</small></span>
+        </div>
+      </section>
+      <div id="workspace-shell" hidden>
+        <section class="hero">
+          <div><p class="eyebrow">TRAVEL &amp; EXPENSE</p><h1 id="page-title">Travel overview</h1><p id="greeting"></p></div>
+          <div id="toolbar"></div>
+        </section>
+        <section id="overview-panel" aria-label="Travel analytics">
+          <div id="metrics" class="metrics"></div>
+          <div id="analytics" class="analytics"></div>
+        </section>
+        <section id="requests-panel" aria-label="Travel requests">
+          <div class="list-heading"><div><h2>Travel requests</h2><p class="muted">Track approvals, orders, and expenses by trip.</p></div>
+            <div class="filters"><label>Search <input id="search" type="search" placeholder="City, traveler, or ID"></label><label>Status <select id="filter"><option value="">All statuses</option></select></label></div>
+          </div>
+          <div id="trips"></div>
+          <div id="pagination" class="pagination"></div>
+        </section>
+        <section id="policy-panel" hidden aria-label="Travel policies and reports">
+          <p class="demo-note">All policy grades, city groups, hotel-night rules and limits are fictional.</p>
+          <div id="workspace"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+<dialog id="dialog"><form id="action-form"><h2 id="dialog-title"></h2><div id="fields"></div><p id="error" role="alert"></p><div class="buttons"><button type="button" id="cancel" class="secondary">Cancel</button><button id="submit">Confirm</button></div></form></dialog>
+<dialog id="tour" aria-labelledby="tour-title"><h2 id="tour-title">5-minute demo tour</h2><p id="tour-progress" class="eyebrow"></p><h3 id="tour-step"></h3><p id="tour-copy"></p><div class="buttons"><button type="button" class="secondary" id="tour-close">Close</button><button type="button" class="secondary" id="tour-back">Back</button><button type="button" id="tour-next">Next</button></div></dialog>
+<dialog id="reset-dialog" aria-labelledby="reset-title"><form method="dialog"><h2 id="reset-title">Reset your demo?</h2><p>This restores the fictional sample records and switches to Employee. Your changes in this demo will be cleared.</p><div class="buttons"><button class="secondary" value="cancel" autofocus>Cancel</button><button value="reset">Reset demo</button></div></form></dialog>
+</body>
+</html>

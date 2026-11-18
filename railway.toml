@@ -1,0 +1,8 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "/bin/sh -ec 'test \"$RAILWAY_VOLUME_MOUNT_PATH\" = /data || { echo \"Attach the Railway persistent volume at /data\" >&2; exit 1; }; test -w /data || { echo \"The persistent volume at /data is not writable\" >&2; exit 1; }; export DEMO_DATA_DIR=/data DEMO_SECURE_COOKIE=1; exec python server.py'"
+healthcheckPath = "/healthz"
+healthcheckTimeout = 30

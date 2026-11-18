@@ -65,11 +65,11 @@ Open <http://127.0.0.1:8000>. The default store is `.demo-data/`. Set `HOST`, `P
 
 ## Deployment
 
-**Live Demo URL** · Pending public HTTPS verification.
+**[Open the Live Demo](https://travel-desk-demo.onrender.com)** · No account required.
 
 ### Render Free
 
-Deploy the `main` branch using the repository's `render.yaml` Blueprint. It declares one free native Python web service with push-triggered deployments, a unit-test build step and `/healthz`. The start command listens on `0.0.0.0` and reads Render's assigned `PORT`. Render terminates HTTPS and the service always sets Secure session cookies.
+The live service runs the `main` branch on one free native Python web service with a unit-test build step and `/healthz`. The repository includes a `render.yaml` Blueprint for reproducing that configuration. Connect the repository through Render's GitHub integration for push-triggered deploys, or deploy a specific Git commit from the Render dashboard or CLI. The start command listens on `0.0.0.0` and reads Render's assigned `PORT`. Render terminates HTTPS and the service always sets Secure session cookies.
 
 | Setting | Value |
 | --- | --- |

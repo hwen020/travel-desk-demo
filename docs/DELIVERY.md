@@ -16,15 +16,15 @@ Public policy administration is assigned to Admin. The legacy workflow module co
 
 ## Verification
 
-- Baseline: 33 existing tests passed before editing. All 33 remain, and all 5 new HTTP integration tests pass.
+- Tests: All 38 existing v3 tests pass, plus 3 Render-mode tests for startup seeding, lost session recovery, and concurrent visitor isolation.
 - Browser: Chrome verified the welcome page, demo tour, search, switching roles, approval, booking, receipt entry, claim review, statement import and reconciliation, simulated payment, Admin settings, and reset. The 390 px mobile viewport had no horizontal document overflow.
 - Release: JavaScript syntax and Compose configuration were checked. The source ZIP was verified for checksum integrity, extraction and standalone execution.
-- Data review: The workspace contains no Git repository or history to inspect. The pre-change snapshot, previous ZIPs, historical policy source-review notes, local database files and environment settings are excluded from the deliverable. A public ZIP allowlist and credential-pattern scan complement the fictional seed review.
+- Data review: GitHub publication starts from the audited allowlist. The pre-change snapshot, previous ZIPs, historical policy source-review notes, local database files and environment settings are excluded. A credential-pattern scan complements the fictional seed review.
 
 ## Deployment status
 
-Render Free support adds a native Python Blueprint, startup SQLite seeding, cookie rotation on session recovery, and tests for concurrent visitors and reset isolation. It uses one free web service with no additional data resources. Public HTTPS verification is pending.
+The [public Render Free service](https://travel-desk-demo.onrender.com) uses one free native Python instance. The service provisions neither a database nor a disk. External HTTPS checks covered all four roles, a complete request-to-settlement flow, Secure cookies, visitor isolation, and reset. Chrome verified the deployed workflow and 390 px mobile layout. Render may discard visitor edits when the instance sleeps, restarts or is redeployed.
 
 Railway configuration is included for remote Docker builds with a required writable volume at `/data`, secure cookies, and a startup health check. Deploy with one replica. A restart of the extracted application confirmed that the selected role and new trip persisted for the correct visitor, the second visitor retained the seed, and reset touched only the initiating visitor. Deployment requires a Railway account session. The allowlisted ZIP can also serve as a clean GitHub publication source after account authorization.
 
-The application has been exercised over loopback with temporary fictional SQLite files. Docker built an earlier v3 image, then its engine returned an internal error on final rebuild attempts. The final container and Caddy runtime smoke checks are pending. Public HTTPS deployment requires an authorized Docker host and public DNS hostname. No public HTTPS URL has been verified.
+The separate Docker Compose and Caddy configuration remains available for self-hosting. This release validation used Render's native Python runtime.
